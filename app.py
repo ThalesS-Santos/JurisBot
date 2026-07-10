@@ -580,19 +580,7 @@ with st.sidebar:
     else:
         st.error("Não funcionando")
 
-    st.divider()
-    st.markdown("**ℹ️ Sobre o JurisBot**")
-    st.markdown("""
-Este app é um projeto educacional que usa IA (Google Gemini) para realizar triagens jurídicas iniciais.
 
-**Não substitui** a consulta com um advogado ou defensor público.
-
-Desenvolvido com:
-- `Google Gemini API`
-- `gemini-embedding-001` (RAG)
-- `Pydantic` (structured outputs)
-- `Streamlit`
-""")
 
 
 # ─── LAYOUT DUAS COLUNAS ──────────────────────────────────────────────────────
