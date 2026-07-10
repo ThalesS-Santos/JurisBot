@@ -20,9 +20,7 @@ venv.bak/
 .vscode/
 .idea/
 
-# Índice RAG (gerado por build_index.py — não versionar)
-rag_index.npz
-rag_chunks.json
+# Índice RAG (gerado por build_index.py — os binários compactados .npz e .json de metadados devem ser versionados para o deploy online funcionar)
 rag_index.json
 
 # PDFs das leis (baixar das fontes oficiais — ver README)
