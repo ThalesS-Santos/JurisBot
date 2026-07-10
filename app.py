@@ -13,7 +13,7 @@ from cost_tracker import calcular_custo, formatar_custo
 st.set_page_config(
     page_title="JurisBot",
     page_icon="⚖️",
-    layout="centered",
+    layout="wide",
     initial_sidebar_state="collapsed",
 )
 
@@ -201,7 +201,7 @@ div.stButton > button:active {
     font-size: 0.62rem;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: #475569;
+    color: #94A3B8;
     margin-bottom: 24px;
     padding-bottom: 16px;
     border-bottom: 1px solid #1E293B;
@@ -242,7 +242,7 @@ div.stButton > button:active {
     font-size: 0.62rem;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #475569;
+    color: #94A3B8;
     margin: 28px 0 10px 0;
 }
 .jb-section-body {
@@ -322,7 +322,7 @@ div.stButton > button:active {
 }
 .jb-proximo-body {
     font-size: 0.92rem;
-    color: #94A3B8;
+    color: #E2E8F0;
     line-height: 1.7;
 }
 
@@ -340,7 +340,7 @@ div.stButton > button:active {
     gap: 16px;
 }
 .jb-custo span {
-    color: #475569;
+    color: #64748B;
 }
 
 /* ── Sidebar ── */
@@ -517,38 +517,39 @@ Desenvolvido com:
 """)
 
 
-# ─── INPUT ────────────────────────────────────────────────────────────────────
-st.markdown('<div class="jb-input-label">Descreva sua situação</div>', unsafe_allow_html=True)
+# ─── LAYOUT DUAS COLUNAS ──────────────────────────────────────────────────────
+col_left, col_right = st.columns([1, 1], gap="large")
 
-EXEMPLOS = [
-    "Comprei um celular na loja e veio com defeito. A loja se recusa a trocar dizendo que tenho que mandar para a assistência técnica.",
-    "Fui demitido sem justa causa após 3 anos de empresa e não recebi meu FGTS nem as verbas rescisórias corretamente.",
-    "Meu senhorio quer me despejar sem aviso prévio e sem motivo justo. Tenho contrato até o ano que vem.",
-    "Sofri um acidente de trabalho e meu empregador não quer registrar o acidente nem pagar o afastamento.",
-]
+with col_left:
+    st.markdown('<div class="jb-input-label">Descreva sua situação</div>', unsafe_allow_html=True)
 
-with st.expander("💡 Ver exemplos de relatos"):
-    for ex in EXEMPLOS:
-        if st.button(f'"{ex[:80]}…"', key=ex):
-            st.session_state.relato_atual = ex
+    EXEMPLOS = [
+        "Comprei um celular na loja e veio com defeito. A loja se recusa a trocar dizendo que tenho que mandar para a assistência técnica.",
+        "Fui demitido sem justa causa após 3 anos de empresa e não recebi meu FGTS nem as verbas rescisórias corretamente.",
+        "Meu senhorio quer me despejar sem aviso prévio e sem motivo justo. Tenho contrato até o ano que vem.",
+        "Sofri um acidente de trabalho e meu empregador não quer registrar o acidente nem pagar o afastamento.",
+    ]
 
-relato = st.text_area(
-    label="relato",
-    label_visibility="collapsed",
-    value=st.session_state.relato_atual,
-    placeholder="Conte o que aconteceu com suas próprias palavras. Quanto mais detalhes, melhor a análise...",
-    height=160,
-    key="input_relato"
-)
+    with st.expander("💡 Ver exemplos de relatos"):
+        for ex in EXEMPLOS:
+            if st.button(f'"{ex[:80]}…"', key=ex):
+                st.session_state.relato_atual = ex
 
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    analisar = st.button("⚖️  Analisar meu caso")
+    relato = st.text_area(
+        label="relato",
+        label_visibility="collapsed",
+        value=st.session_state.relato_atual,
+        placeholder="Conte o que aconteceu com suas próprias palavras. Quanto mais detalhes, melhor a análise...",
+        height=180,
+        key="input_relato"
+    )
 
-st.markdown(
-    '<div class="jb-aviso">Esta análise é orientativa e não substitui aconselhamento jurídico profissional.</div>',
-    unsafe_allow_html=True
-)
+    analisar = st.button("⚖️  Analisar meu caso", use_container_width=True)
+
+    st.markdown(
+        '<div class="jb-aviso">Esta análise é orientativa e não substitui aconselhamento jurídico profissional.</div>',
+        unsafe_allow_html=True
+    )
 
 # ─── PROCESSAMENTO ────────────────────────────────────────────────────────────
 if analisar:
@@ -564,50 +565,51 @@ if analisar:
                     resultado, custo = analisar_caso(client, relato)
                     st.session_state.resultado = resultado
                     st.session_state.historico_custos.append(custo)
+                    st.rerun()
                 except Exception as e:
                     st.error(f"Erro ao processar: {e}")
                     st.session_state.resultado = None
 
+# ─── COLUNA DA DIREITA (RESULTADO OU PLACEHOLDER) ─────────────────────────────
+with col_right:
+    if st.session_state.resultado:
+        r: TriagemJuridica = st.session_state.resultado
+        custo_info = st.session_state.historico_custos[-1] if st.session_state.historico_custos else {}
 
-# ─── RESULTADO ────────────────────────────────────────────────────────────────
-if st.session_state.resultado:
-    r: TriagemJuridica = st.session_state.resultado
-    custo_info = st.session_state.historico_custos[-1] if st.session_state.historico_custos else {}
+        veredicto_map = {
+            "sim":               ("✓ &nbsp;Tem Fundamento Jurídico", "jb-tem-caso"),
+            "nao":               ("✕ &nbsp;Sem Fundamento Aparente", "jb-sem-caso"),
+            "necessita_analise": ("◎ &nbsp;Necessita Análise Profissional", "jb-analise"),
+        }
+        label_v, classe_v = veredicto_map.get(r.tem_caso, ("—", ""))
 
-    veredicto_map = {
-        "sim":               ("✓ &nbsp;Tem Fundamento Jurídico", "jb-tem-caso"),
-        "nao":               ("✕ &nbsp;Sem Fundamento Aparente", "jb-sem-caso"),
-        "necessita_analise": ("◎ &nbsp;Necessita Análise Profissional", "jb-analise"),
-    }
-    label_v, classe_v = veredicto_map.get(r.tem_caso, ("—", ""))
+        # Escapar todos os campos dinâmicos para evitar quebra do HTML
+        area      = html_lib.escape(r.area_direito)
+        resumo    = html_lib.escape(r.resumo_caso)
+        proximo   = html_lib.escape(r.proximo_passo)
+        orientacao = html_lib.escape(r.orientacao_proximo_passo)
 
-    # Escapar todos os campos dinâmicos para evitar quebra do HTML
-    area      = html_lib.escape(r.area_direito)
-    resumo    = html_lib.escape(r.resumo_caso)
-    proximo   = html_lib.escape(r.proximo_passo)
-    orientacao = html_lib.escape(r.orientacao_proximo_passo)
+        artigos_html = "".join(
+            f'<div class="jb-artigo">{html_lib.escape(art)}</div>'
+            for art in r.artigos_aplicaveis
+        )
 
-    artigos_html = "".join(
-        f'<div class="jb-artigo">{html_lib.escape(art)}</div>'
-        for art in r.artigos_aplicaveis
-    )
-
-    obs_html = ""
-    if r.observacao_importante:
-        obs_html = f"""
+        obs_html = ""
+        if r.observacao_importante:
+            obs_html = f"""
 <div class="jb-section-title">⚠ &nbsp;Atenção</div>
 <div class="jb-obs">{html_lib.escape(r.observacao_importante)}</div>"""
 
-    custo_html = ""
-    if custo_info:
-        custo_html = f"""
+        custo_html = ""
+        if custo_info:
+            custo_html = f"""
 <div class="jb-custo">
 <span>entrada {custo_info.get('tokens_input', '—')} tk</span>
 <span>saída {custo_info.get('tokens_output', '—')} tk</span>
 <span>US$ {custo_info.get('custo_usd', 0):.5f}</span>
 </div>"""
 
-    st.markdown(f"""
+        st.markdown(f"""
 <div class="jb-card">
 <div class="jb-card-header">
 ◈ &nbsp;Resultado da Triagem Jurídica
@@ -638,5 +640,13 @@ if st.session_state.resultado:
 </div>
 
 {custo_html}
+</div>
+""", unsafe_allow_html=True)
+    else:
+        st.markdown("""
+<div class="jb-card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:450px; border: 1.5px dashed #334155; background:rgba(30,41,59,0.15); border-radius:16px; padding:40px; margin-top:28px;">
+<div style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 0 10px rgba(96,165,250,0.2));">⚖️</div>
+<div style="font-family:'JetBrains Mono', monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; color:#94A3B8; margin-bottom:8px; font-weight:600;">Aguardando Relato</div>
+<div style="font-size:0.88rem; color:#64748B; max-width:320px; line-height:1.6;">Descreva a sua situação no painel à esquerda e clique em <b>Analisar meu caso</b> para obter a triagem detalhada por Inteligência Artificial.</div>
 </div>
 """, unsafe_allow_html=True)
