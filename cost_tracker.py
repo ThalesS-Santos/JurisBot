@@ -4,27 +4,51 @@ Módulo de Controle de Custos — JurisBot
 Rastreia tokens e custos da API Gemini por consulta.
 
 Preços (USD por 1 milhão de tokens) — referência jun/2026:
-  gemini-3-flash-preview:       input $0.50 / output $3.00
-  gemini-3.1-flash-lite-preview: input $0.10 / output $0.40
+  gemini-3-flash-preview:            input $0.50 / output $3.00
+  gemini-2.5-flash / flash-lite:     input $0.30/$0.10 / output $2.50/$0.40
+  gemini-2.0-flash / flash-lite:     input $0.10/$0.075 / output $0.40/$0.30
 """
 
 # Tabela de preços por modelo (USD / 1M tokens)
 PRECOS = {
+    # Gemini 3 Series
     "gemini-3-flash-preview": {
         "input":  0.50,
         "output": 3.00,
     },
-    "gemini-3.1-flash-lite-preview": {
+    "gemini-3-pro-preview": {
+        "input":  2.00,
+        "output": 12.00,
+    },
+    # Gemini 2.5 Series
+    "gemini-2.5-flash": {
+        "input":  0.30,
+        "output": 2.50,
+    },
+    "gemini-2.5-flash-preview-09-2025": {
+        "input":  0.30,
+        "output": 2.50,
+    },
+    "gemini-2.5-flash-lite": {
         "input":  0.10,
         "output": 0.40,
     },
-    "gemini-3.1-flash-lite": {
+    "gemini-2.5-flash-lite-preview-09-2025": {
         "input":  0.10,
         "output": 0.40,
     },
-    "gemini-3-flash": {
-        "input":  0.50,
-        "output": 3.00,
+    "gemini-2.5-pro": {
+        "input":  1.25,
+        "output": 10.00,
+    },
+    # Gemini 2.0 Series
+    "gemini-2.0-flash": {
+        "input":  0.10,
+        "output": 0.40,
+    },
+    "gemini-2.0-flash-lite": {
+        "input":  0.075,
+        "output": 0.30,
     },
 }
 

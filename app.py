@@ -19,202 +19,335 @@ st.set_page_config(
 # ─── ESTILO VISUAL ─────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
+/* ── Reset e base ── */
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
-    background-color: #F7F6F3;
 }
 
-/* Header */
-.jb-header {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    border-bottom: 2px solid #1C1C1C;
-    padding-bottom: 16px;
+/* Esconde label padrão do Streamlit no textarea */
+.stTextArea label { display: none; }
+
+/* ── Hero banner ── */
+.jb-hero {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #0F4C81 100%);
+    border-radius: 16px;
+    padding: 40px 40px 36px;
     margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
 }
-.jb-logo {
-    font-family: 'IBM Plex Serif', serif;
-    font-size: 2.2rem;
-    font-weight: 600;
-    color: #1C1C1C;
-    letter-spacing: -1px;
+.jb-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(59,130,246,0.25) 0%, transparent 70%);
+    border-radius: 50%;
 }
-.jb-tagline {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.85rem;
-    color: #6B6B6B;
-    font-weight: 400;
+.jb-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 30%;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
+    border-radius: 50%;
 }
-
-/* Input area */
-.jb-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.7rem;
+.jb-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(59,130,246,0.2);
+    border: 1px solid rgba(59,130,246,0.35);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.72rem;
     font-weight: 500;
-    color: #6B6B6B;
+    color: #93C5FD;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 6px;
+    margin-bottom: 16px;
 }
-
-/* Card de resultado */
-.jb-card {
-    background: #FFFFFF;
-    border: 1px solid #E0DDD8;
-    border-radius: 6px;
-    padding: 28px 32px;
-    margin-top: 24px;
+.jb-hero-title {
+    font-size: 2.6rem;
+    font-weight: 700;
+    color: #F8FAFC;
+    letter-spacing: -1.5px;
+    line-height: 1.15;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
 }
-.jb-card-header {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #9B9B9B;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #F0EDE8;
-    padding-bottom: 12px;
+.jb-hero-title span {
+    background: linear-gradient(90deg, #60A5FA, #818CF8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
-
-/* Veredicto */
-.jb-veredicto {
-    display: inline-block;
-    padding: 6px 14px;
-    border-radius: 4px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.78rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    margin-bottom: 20px;
-}
-.jb-tem-caso { background: #E8F4EC; color: #1A6B35; }
-.jb-sem-caso { background: #FDF3E8; color: #8B4E0F; }
-.jb-analise  { background: #EEF2FB; color: #2A4A9B; }
-
-/* Seções do resultado */
-.jb-section-title {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #9B9B9B;
-    margin: 20px 0 8px 0;
-}
-.jb-section-body {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.92rem;
-    color: #2C2C2C;
-    line-height: 1.7;
-}
-
-/* Artigos de lei */
-.jb-artigo {
-    background: #F7F6F3;
-    border-left: 3px solid #1C1C1C;
-    padding: 10px 16px;
-    margin: 6px 0;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.78rem;
-    color: #3C3C3C;
-    border-radius: 0 4px 4px 0;
-}
-
-/* Próximo passo — destaque */
-.jb-proximo {
-    background: #1C1C1C;
-    color: #F7F6F3;
-    border-radius: 6px;
-    padding: 16px 20px;
-    margin-top: 20px;
-    font-size: 0.92rem;
+.jb-hero-sub {
+    font-size: 0.97rem;
+    color: #94A3B8;
     line-height: 1.6;
+    max-width: 480px;
+    position: relative;
+    z-index: 1;
 }
-.jb-proximo-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.6rem;
+.jb-hero-stats {
+    display: flex;
+    gap: 28px;
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+    z-index: 1;
+}
+.jb-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.jb-stat-num {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #F1F5F9;
+}
+.jb-stat-label {
+    font-size: 0.72rem;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* ── Seção de input ── */
+.jb-input-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #64748B;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #8B8B8B;
-    margin-bottom: 8px;
-}
-
-/* Custo */
-.jb-custo {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.7rem;
-    color: #9B9B9B;
-    text-align: right;
-    margin-top: 20px;
-    padding-top: 14px;
-    border-top: 1px solid #F0EDE8;
-}
-
-/* Botão */
-div.stButton > button {
-    background: #1C1C1C;
-    color: #F7F6F3;
-    border: none;
-    border-radius: 4px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.78rem;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    padding: 12px 32px;
-    width: 100%;
-    cursor: pointer;
-    transition: background 0.15s;
-}
-div.stButton > button:hover {
-    background: #3C3C3C;
-    color: #F7F6F3;
-}
-div.stButton > button:active {
-    background: #555;
-}
-
-/* Aviso */
-.jb-aviso {
-    font-size: 0.75rem;
-    color: #9B9B9B;
-    font-style: italic;
-    margin-top: 8px;
-    text-align: center;
+    margin-bottom: 10px;
 }
 
 /* Textarea override */
 textarea {
     font-family: 'Inter', sans-serif !important;
-    font-size: 0.93rem !important;
-    background: #FFFFFF !important;
-    border: 1px solid #D8D5D0 !important;
-    border-radius: 4px !important;
+    font-size: 0.95rem !important;
+    border-radius: 10px !important;
+    border: 1.5px solid #334155 !important;
+    background: #0F172A !important;
+    color: #E2E8F0 !important;
+    padding: 14px 16px !important;
+    transition: border-color 0.2s !important;
+    line-height: 1.65 !important;
+}
+textarea:focus {
+    border-color: #3B82F6 !important;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important;
 }
 
-/* Sidebar custo acumulado */
-.jb-acumulado {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.75rem;
-    color: #5C5C5C;
-    line-height: 2;
-}
-
-/* Área de exemplos */
-.jb-exemplo {
+/* ── Botão principal ── */
+div.stButton > button {
+    background: linear-gradient(135deg, #2563EB, #4F46E5);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 14px 32px;
+    width: 100%;
     cursor: pointer;
-    background: #FFFFFF;
-    border: 1px solid #E0DDD8;
-    border-radius: 4px;
-    padding: 10px 14px;
-    font-size: 0.82rem;
-    color: #4C4C4C;
-    margin-bottom: 6px;
-    transition: border-color 0.15s;
+    transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(37,99,235,0.35);
 }
-.jb-exemplo:hover {
-    border-color: #1C1C1C;
+div.stButton > button:hover {
+    background: linear-gradient(135deg, #1D4ED8, #4338CA);
+    box-shadow: 0 6px 20px rgba(37,99,235,0.45);
+    transform: translateY(-1px);
+    color: #FFFFFF;
+}
+div.stButton > button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+}
+
+/* ── Aviso legal ── */
+.jb-aviso {
+    font-size: 0.74rem;
+    color: #475569;
+    font-style: italic;
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* ── Card de resultado ── */
+.jb-card {
+    background: #0F172A;
+    border: 1px solid #1E293B;
+    border-radius: 16px;
+    padding: 32px 36px;
+    margin-top: 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+.jb-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #475569;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #1E293B;
+}
+
+/* ── Veredicto ── */
+.jb-veredicto {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    margin-bottom: 28px;
+}
+.jb-tem-caso {
+    background: rgba(16,185,129,0.12);
+    border: 1px solid rgba(16,185,129,0.3);
+    color: #34D399;
+}
+.jb-sem-caso {
+    background: rgba(245,158,11,0.12);
+    border: 1px solid rgba(245,158,11,0.3);
+    color: #FCD34D;
+}
+.jb-analise {
+    background: rgba(99,102,241,0.12);
+    border: 1px solid rgba(99,102,241,0.3);
+    color: #A5B4FC;
+}
+
+/* ── Seções do resultado ── */
+.jb-section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #475569;
+    margin: 28px 0 10px 0;
+}
+.jb-section-body {
+    font-size: 0.95rem;
+    color: #CBD5E1;
+    line-height: 1.75;
+}
+
+/* ── Grid de duas colunas para área/resumo ── */
+.jb-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 4px;
+}
+.jb-info-block {
+    background: #1E293B;
+    border-radius: 10px;
+    padding: 16px 18px;
+}
+.jb-info-block .jb-section-title { margin-top: 0; }
+
+/* ── Artigos de lei ── */
+.jb-artigos-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 2px;
+}
+.jb-artigo {
+    background: #1E293B;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.76rem;
+    color: #93C5FD;
+    white-space: nowrap;
+}
+
+/* ── Observação ── */
+.jb-obs {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-top: 6px;
+    font-size: 0.9rem;
+    color: #FCD34D;
+    line-height: 1.65;
+}
+
+/* ── Próximo passo ── */
+.jb-proximo {
+    background: linear-gradient(135deg, #1E3A5F, #1E2A4A);
+    border: 1px solid rgba(59,130,246,0.25);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin-top: 28px;
+}
+.jb-proximo-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #60A5FA;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.jb-proximo-destino {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #F1F5F9;
+    margin-bottom: 10px;
+}
+.jb-proximo-body {
+    font-size: 0.92rem;
+    color: #94A3B8;
+    line-height: 1.7;
+}
+
+/* ── Rodapé de custo ── */
+.jb-custo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: #334155;
+    text-align: right;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #1E293B;
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+}
+.jb-custo span {
+    color: #475569;
+}
+
+/* ── Sidebar ── */
+.jb-acumulado {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: #94A3B8;
+    line-height: 2.2;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -319,9 +452,26 @@ if "relato_atual" not in st.session_state:
 
 # ─── HEADER ───────────────────────────────────────────────────────────────────
 st.markdown("""
-<div class="jb-header">
-    <div class="jb-logo">⚖️ JurisBot</div>
-    <div class="jb-tagline">Triagem jurídica gratuita para cidadãos brasileiros</div>
+<div class="jb-hero">
+    <div class="jb-badge">⚖️ &nbsp;Triagem Jurídica · IA</div>
+    <div class="jb-hero-title">Juris<span>Bot</span></div>
+    <div class="jb-hero-sub">
+        Descreva sua situação em linguagem simples e receba uma orientação jurídica inicial gratuita — área do direito, artigos aplicáveis e próximo passo recomendado.
+    </div>
+    <div class="jb-hero-stats">
+        <div class="jb-stat">
+            <div class="jb-stat-num">5</div>
+            <div class="jb-stat-label">Áreas do Direito</div>
+        </div>
+        <div class="jb-stat">
+            <div class="jb-stat-num">100%</div>
+            <div class="jb-stat-label">Gratuito</div>
+        </div>
+        <div class="jb-stat">
+            <div class="jb-stat-num">Gemini 3</div>
+            <div class="jb-stat-label">Motor de IA</div>
+        </div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -367,7 +517,7 @@ Desenvolvido com:
 
 
 # ─── INPUT ────────────────────────────────────────────────────────────────────
-st.markdown('<div class="jb-label">Descreva sua situação</div>', unsafe_allow_html=True)
+st.markdown('<div class="jb-input-label">Descreva sua situação</div>', unsafe_allow_html=True)
 
 EXEMPLOS = [
     "Comprei um celular na loja e veio com defeito. A loja se recusa a trocar dizendo que tenho que mandar para a assistência técnica.",
@@ -423,11 +573,10 @@ if st.session_state.resultado:
     r: TriagemJuridica = st.session_state.resultado
     custo_info = st.session_state.historico_custos[-1] if st.session_state.historico_custos else {}
 
-    # Veredicto
     veredicto_map = {
-        "sim":               ("TEM FUNDAMENTO JURÍDICO", "jb-tem-caso"),
-        "nao":               ("SEM FUNDAMENTO JURÍDICO APARENTE", "jb-sem-caso"),
-        "necessita_analise": ("NECESSITA ANÁLISE PROFISSIONAL", "jb-analise"),
+        "sim":               ("✓ &nbsp;Tem Fundamento Jurídico", "jb-tem-caso"),
+        "nao":               ("✕ &nbsp;Sem Fundamento Aparente", "jb-sem-caso"),
+        "necessita_analise": ("◎ &nbsp;Necessita Análise Profissional", "jb-analise"),
     }
     label_v, classe_v = veredicto_map.get(r.tem_caso, ("—", ""))
 
@@ -439,40 +588,46 @@ if st.session_state.resultado:
     obs_html = ""
     if r.observacao_importante:
         obs_html = f"""
-        <div class="jb-section-title">⚠️ Atenção</div>
-        <div class="jb-section-body" style="color:#8B4E0F; background:#FDF3E8; padding:12px; border-radius:4px;">
-            {r.observacao_importante}
-        </div>"""
+        <div class="jb-section-title">⚠ &nbsp;Atenção</div>
+        <div class="jb-obs">{r.observacao_importante}</div>"""
 
     custo_html = ""
     if custo_info:
         custo_html = f"""
         <div class="jb-custo">
-            tokens entrada: {custo_info.get('tokens_input', '—')} ·
-            tokens saída: {custo_info.get('tokens_output', '—')} ·
-            custo: US$ {custo_info.get('custo_usd', 0):.5f}
+            <span>entrada {custo_info.get('tokens_input', '—')} tk</span>
+            <span>saída {custo_info.get('tokens_output', '—')} tk</span>
+            <span>US$ {custo_info.get('custo_usd', 0):.5f}</span>
         </div>"""
 
     st.markdown(f"""
 <div class="jb-card">
-    <div class="jb-card-header">RESULTADO DA TRIAGEM JURÍDICA</div>
+    <div class="jb-card-header">
+        ◈ &nbsp;Resultado da Triagem Jurídica
+    </div>
 
     <span class="jb-veredicto {classe_v}">{label_v}</span>
 
-    <div class="jb-section-title">Área do Direito</div>
-    <div class="jb-section-body"><b>{r.area_direito}</b></div>
-
-    <div class="jb-section-title">Resumo do Caso</div>
-    <div class="jb-section-body">{r.resumo_caso}</div>
+    <div class="jb-grid-2">
+        <div class="jb-info-block">
+            <div class="jb-section-title">Área do Direito</div>
+            <div class="jb-section-body" style="font-weight:600; color:#E2E8F0;">{r.area_direito}</div>
+        </div>
+        <div class="jb-info-block">
+            <div class="jb-section-title">Resumo do Caso</div>
+            <div class="jb-section-body" style="font-size:0.85rem;">{r.resumo_caso}</div>
+        </div>
+    </div>
 
     <div class="jb-section-title">Artigos Aplicáveis</div>
-    {artigos_html}
+    <div class="jb-artigos-grid">{artigos_html}</div>
 
     {obs_html}
 
     <div class="jb-proximo">
-        <div class="jb-proximo-label">Próximo passo recomendado → {r.proximo_passo}</div>
-        {r.orientacao_proximo_passo}
+        <div class="jb-proximo-label">→ &nbsp;Próximo passo recomendado</div>
+        <div class="jb-proximo-destino">{r.proximo_passo}</div>
+        <div class="jb-proximo-body">{r.orientacao_proximo_passo}</div>
     </div>
 
     {custo_html}
