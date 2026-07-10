@@ -576,13 +576,9 @@ with st.sidebar:
     st.divider()
     st.markdown("**🔍 Status do RAG**")
     if _stats:
-        _n_trechos = f"{_stats['chunks']:,}".replace(",", ".")
-        st.success(
-            f"Índice ativo — {_stats['leis']} leis, "
-            f"{_n_trechos} trechos ({_stats['dim']} dims)"
-        )
+        st.success("Funcionando")
     else:
-        st.warning("Índice não encontrado. Execute:\n```\npython build_index.py\n```")
+        st.error("Não funcionando")
 
     st.divider()
     st.markdown("**ℹ️ Sobre o JurisBot**")
