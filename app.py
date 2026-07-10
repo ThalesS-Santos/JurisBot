@@ -1,6 +1,7 @@
 import streamlit as st
 import json
 import time
+import html as html_lib
 from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
@@ -580,8 +581,14 @@ if st.session_state.resultado:
     }
     label_v, classe_v = veredicto_map.get(r.tem_caso, ("—", ""))
 
+    # Escapar todos os campos dinâmicos para evitar quebra do HTML
+    area      = html_lib.escape(r.area_direito)
+    resumo    = html_lib.escape(r.resumo_caso)
+    proximo   = html_lib.escape(r.proximo_passo)
+    orientacao = html_lib.escape(r.orientacao_proximo_passo)
+
     artigos_html = "".join(
-        f'<div class="jb-artigo">{art}</div>'
+        f'<div class="jb-artigo">{html_lib.escape(art)}</div>'
         for art in r.artigos_aplicaveis
     )
 
@@ -589,7 +596,7 @@ if st.session_state.resultado:
     if r.observacao_importante:
         obs_html = f"""
         <div class="jb-section-title">⚠ &nbsp;Atenção</div>
-        <div class="jb-obs">{r.observacao_importante}</div>"""
+        <div class="jb-obs">{html_lib.escape(r.observacao_importante)}</div>"""
 
     custo_html = ""
     if custo_info:
@@ -611,11 +618,11 @@ if st.session_state.resultado:
     <div class="jb-grid-2">
         <div class="jb-info-block">
             <div class="jb-section-title">Área do Direito</div>
-            <div class="jb-section-body" style="font-weight:600; color:#E2E8F0;">{r.area_direito}</div>
+            <div class="jb-section-body" style="font-weight:600; color:#E2E8F0;">{area}</div>
         </div>
         <div class="jb-info-block">
             <div class="jb-section-title">Resumo do Caso</div>
-            <div class="jb-section-body" style="font-size:0.85rem;">{r.resumo_caso}</div>
+            <div class="jb-section-body" style="font-size:0.85rem;">{resumo}</div>
         </div>
     </div>
 
@@ -626,8 +633,8 @@ if st.session_state.resultado:
 
     <div class="jb-proximo">
         <div class="jb-proximo-label">→ &nbsp;Próximo passo recomendado</div>
-        <div class="jb-proximo-destino">{r.proximo_passo}</div>
-        <div class="jb-proximo-body">{r.orientacao_proximo_passo}</div>
+        <div class="jb-proximo-destino">{proximo}</div>
+        <div class="jb-proximo-body">{orientacao}</div>
     </div>
 
     {custo_html}
