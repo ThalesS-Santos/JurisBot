@@ -6,8 +6,8 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
 from typing import List, Literal, Optional
-from knowledge_base import BASE_JURIDICA
 from cost_tracker import calcular_custo, formatar_custo
+from rag_manager import rag
 
 # ─── CONFIG ────────────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -402,7 +402,15 @@ def get_client():
 def analisar_caso(client, relato: str) -> tuple[TriagemJuridica, dict]:
     modelo = "gemini-3-flash-preview"
 
-    contexto_juridico = BASE_JURIDICA
+    # RAG: recupera os chunks mais relevantes para o relato específico
+    if rag.index_exists():
+        contexto_juridico = rag.get_context(client, relato, top_k=8)
+        fonte_contexto = "RAG (embeddings Gemini)"
+    else:
+        # Fallback para a base estática enquanto o índice não existe
+        from knowledge_base import BASE_JURIDICA
+        contexto_juridico = BASE_JURIDICA
+        fonte_contexto = "base estática (execute build_index.py para ativar o RAG)"
 
     system_prompt = f"""Você é um assistente jurídico especializado em orientar cidadãos brasileiros de baixa renda sobre seus direitos.
 
@@ -412,9 +420,10 @@ IMPORTANTE:
 - Você NÃO é advogado e NÃO presta consultoria jurídica formal.
 - Sua análise é orientativa e educacional — sempre recomende buscar um profissional.
 - Seja claro, direto e use linguagem acessível.
-- Base seu raciocínio na legislação brasileira vigente.
+- Base seu raciocínio APENAS nos trechos de legislação fornecidos abaixo.
+- Cite os artigos exatos encontrados nos trechos.
 
-BASE DE CONHECIMENTO JURÍDICO DISPONÍVEL:
+TRECHOS RELEVANTES DA LEGISLAÇÃO BRASILEIRA (recuperados por similaridade semântica):
 {contexto_juridico}
 
 Analise o relato e preencha todos os campos do schema com precisão."""
@@ -439,6 +448,7 @@ Analise o relato e preencha todos os campos do schema com precisão."""
 
     resultado = response.parsed
     custo = calcular_custo(response, modelo)
+    custo["fonte_contexto"] = fonte_contexto
     return resultado, custo
 
 
@@ -503,6 +513,13 @@ with st.sidebar:
         st.markdown("*Nenhuma consulta ainda.*")
 
     st.divider()
+    st.markdown("**🔍 Status do RAG**")
+    if rag.index_exists():
+        st.success("Índice ativo — RAG com embeddings Gemini")
+    else:
+        st.warning("Índice não encontrado. Execute:\n```\npython build_index.py\n```")
+
+    st.divider()
     st.markdown("**ℹ️ Sobre o JurisBot**")
     st.markdown("""
 Este app é um projeto educacional que usa IA (Google Gemini) para realizar triagens jurídicas iniciais.
@@ -511,8 +528,8 @@ Este app é um projeto educacional que usa IA (Google Gemini) para realizar tria
 
 Desenvolvido com:
 - `Google Gemini API`
+- `gemini-embedding-001` (RAG)
 - `Pydantic` (structured outputs)
-- `RAG` com base jurídica embutida
 - `Streamlit`
 """)
 
@@ -602,8 +619,10 @@ with col_right:
 
         custo_html = ""
         if custo_info:
+            fonte = html_lib.escape(custo_info.get("fonte_contexto", ""))
             custo_html = f"""
 <div class="jb-custo">
+<span style="color:#334155">contexto: {fonte}</span>
 <span>entrada {custo_info.get('tokens_input', '—')} tk</span>
 <span>saída {custo_info.get('tokens_output', '—')} tk</span>
 <span>US$ {custo_info.get('custo_usd', 0):.5f}</span>
