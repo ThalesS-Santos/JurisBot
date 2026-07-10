@@ -563,9 +563,7 @@ with st.sidebar:
 <div class="jb-acumulado">
 📋 Consultas: <b>{total_consultas}</b><br>
 🔤 Tokens entrada: <b>{total_input:,}</b><br>
-📝 Tokens saída: <b>{total_output:,}</b><br>
-💵 Custo total: <b>US$ {total_custo:.5f}</b><br>
-🇧🇷 Em reais (≈ R$ {COTACAO_BRL}/USD): <b>R$ {total_custo * COTACAO_BRL:.4f}</b>
+📝 Tokens saída: <b>{total_output:,}</b>
 </div>
 """, unsafe_allow_html=True)
 
@@ -705,7 +703,6 @@ with col_right:
 <span style="color:#334155">RAG · {n_fontes} fontes</span>
 <span>entrada {custo_info.get('tokens_input', '—')} tk</span>
 <span>saída {custo_info.get('tokens_output', '—')} tk</span>
-<span>US$ {custo_info.get('custo_usd', 0):.5f}</span>
 </div>"""
 
         st.markdown(f"""
