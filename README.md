@@ -50,19 +50,20 @@ Detalhes técnicos:
 
 ## 🛠️ Tecnologias utilizadas
 
-| Técnica | Aula | Uso no JurisBot |
-|---------|------|-----------------|
-| Prompt Engineering | Aula 2/3 | Persona de "orientador jurídico popular" |
-| Thinking Mode | Aula 3 | Raciocínio jurídico no modo `low` |
-| RAG real | Aula 8 | `gemini-embedding-001` + índice vetorial NumPy sobre PDFs oficiais |
-| Structured Outputs | Aula 9 | Schema Pydantic `TriagemJuridica` |
-| Controle de Custo | Aula 2 | `cost_tracker.py` (geração + embeddings) |
+| Técnica            | Aula     | Uso no JurisBot                                                    |
+| ------------------ | -------- | ------------------------------------------------------------------ |
+| Prompt Engineering | Aula 2/3 | Persona de "orientador jurídico popular"                           |
+| Thinking Mode      | Aula 3   | Raciocínio jurídico no modo `low`                                  |
+| RAG real           | Aula 8   | `gemini-embedding-001` + índice vetorial NumPy sobre PDFs oficiais |
+| Structured Outputs | Aula 9   | Schema Pydantic `TriagemJuridica`                                  |
+| Controle de Custo  | Aula 2   | `cost_tracker.py` (geração + embeddings)                           |
 
 ---
 
 ## 🚀 Como rodar
 
 ### 1. Clone e instale
+
 ```bash
 git clone <seu-repo>
 cd jurisbot
@@ -70,14 +71,19 @@ pip install -r requirements.txt
 ```
 
 ### 2. Configure a chave da API
+
 Crie `.streamlit/secrets.toml`:
+
 ```toml
 GEMINI_API_KEY = "sua-chave-real-aqui"
 ```
+
 Pegue sua chave em: https://aistudio.google.com/app/apikey
 
 ### 3. Baixe os PDFs das leis para a pasta `leis/`
+
 Fontes oficiais (gratuitas) — a base de referência usa estas 9 leis:
+
 - [Constituição Federal](https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm)
 - [CLT](https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452.htm)
 - [CDC — Lei 8.078/90](https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm)
@@ -93,11 +99,13 @@ Fontes oficiais (gratuitas) — a base de referência usa estas 9 leis:
 > dentro de `build_index.py`.
 
 ### 4. Construa o índice RAG (uma vez, ~US$ 0,02)
+
 ```bash
 python build_index.py
 ```
 
 ### 5. Rode o app
+
 ```bash
 streamlit run app.py
 ```
@@ -119,8 +127,6 @@ jurisbot/
 └── .streamlit/
     └── secrets.toml    # Chave da API (NÃO subir no Git)
 ```
-
----
 
 ## 🔮 Próximos passos (roadmap)
 
