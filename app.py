@@ -595,48 +595,48 @@ if st.session_state.resultado:
     obs_html = ""
     if r.observacao_importante:
         obs_html = f"""
-        <div class="jb-section-title">⚠ &nbsp;Atenção</div>
-        <div class="jb-obs">{html_lib.escape(r.observacao_importante)}</div>"""
+<div class="jb-section-title">⚠ &nbsp;Atenção</div>
+<div class="jb-obs">{html_lib.escape(r.observacao_importante)}</div>"""
 
     custo_html = ""
     if custo_info:
         custo_html = f"""
-        <div class="jb-custo">
-            <span>entrada {custo_info.get('tokens_input', '—')} tk</span>
-            <span>saída {custo_info.get('tokens_output', '—')} tk</span>
-            <span>US$ {custo_info.get('custo_usd', 0):.5f}</span>
-        </div>"""
+<div class="jb-custo">
+<span>entrada {custo_info.get('tokens_input', '—')} tk</span>
+<span>saída {custo_info.get('tokens_output', '—')} tk</span>
+<span>US$ {custo_info.get('custo_usd', 0):.5f}</span>
+</div>"""
 
     st.markdown(f"""
 <div class="jb-card">
-    <div class="jb-card-header">
-        ◈ &nbsp;Resultado da Triagem Jurídica
-    </div>
+<div class="jb-card-header">
+◈ &nbsp;Resultado da Triagem Jurídica
+</div>
 
-    <span class="jb-veredicto {classe_v}">{label_v}</span>
+<span class="jb-veredicto {classe_v}">{label_v}</span>
 
-    <div class="jb-grid-2">
-        <div class="jb-info-block">
-            <div class="jb-section-title">Área do Direito</div>
-            <div class="jb-section-body" style="font-weight:600; color:#E2E8F0;">{area}</div>
-        </div>
-        <div class="jb-info-block">
-            <div class="jb-section-title">Resumo do Caso</div>
-            <div class="jb-section-body" style="font-size:0.85rem;">{resumo}</div>
-        </div>
-    </div>
+<div class="jb-grid-2">
+<div class="jb-info-block">
+<div class="jb-section-title">Área do Direito</div>
+<div class="jb-section-body" style="font-weight:600; color:#E2E8F0;">{area}</div>
+</div>
+<div class="jb-info-block">
+<div class="jb-section-title">Resumo do Caso</div>
+<div class="jb-section-body" style="font-size:0.85rem;">{resumo}</div>
+</div>
+</div>
 
-    <div class="jb-section-title">Artigos Aplicáveis</div>
-    <div class="jb-artigos-grid">{artigos_html}</div>
+<div class="jb-section-title">Artigos Aplicáveis</div>
+<div class="jb-artigos-grid">{artigos_html}</div>
 
-    {obs_html}
+{obs_html}
 
-    <div class="jb-proximo">
-        <div class="jb-proximo-label">→ &nbsp;Próximo passo recomendado</div>
-        <div class="jb-proximo-destino">{proximo}</div>
-        <div class="jb-proximo-body">{orientacao}</div>
-    </div>
+<div class="jb-proximo">
+<div class="jb-proximo-label">→ &nbsp;Próximo passo recomendado</div>
+<div class="jb-proximo-destino">{proximo}</div>
+<div class="jb-proximo-body">{orientacao}</div>
+</div>
 
-    {custo_html}
+{custo_html}
 </div>
 """, unsafe_allow_html=True)
