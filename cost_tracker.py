@@ -3,13 +3,12 @@ Módulo de Controle de Custos — JurisBot
 ========================================
 Rastreia tokens e custos da API Gemini por consulta.
 
-Preços (USD por 1 milhão de tokens) — referência jun/2026:
-  gemini-3-flash-preview:            input $0.50 / output $3.00
-  gemini-2.5-flash / flash-lite:     input $0.30/$0.10 / output $2.50/$0.40
-  gemini-2.0-flash / flash-lite:     input $0.10/$0.075 / output $0.40/$0.30
+Preços (USD por 1 milhão de tokens) — fonte: precos_modelos.md (jun/2026):
+  gemini-3-flash-preview:   input $0.50 / output $3.00
+  gemini-embedding-001:     input $0.15
 """
 
-# Tabela de preços por modelo (USD / 1M tokens)
+# Tabela de preços por modelo de geração (USD / 1M tokens)
 PRECOS = {
     # Gemini 3 Series
     "gemini-3-flash-preview": {
@@ -54,6 +53,21 @@ PRECOS = {
 
 PRECO_PADRAO = {"input": 0.50, "output": 3.00}
 
+# Embeddings (USD / 1M tokens de entrada)
+PRECO_EMBEDDING_1M = 0.15
+
+# Heurística de tokenização para estimativas sem usage_metadata
+# (a API de embeddings não retorna contagem de tokens)
+_CHARS_POR_TOKEN = 4
+
+COTACAO_BRL = 6  # cotação aproximada USD -> BRL
+
+
+def estimar_custo_embedding(texto: str) -> float:
+    """Estima o custo (USD) de embedar um texto, a ~4 chars/token."""
+    tokens_estimados = max(1, len(texto) // _CHARS_POR_TOKEN)
+    return (tokens_estimados / 1_000_000) * PRECO_EMBEDDING_1M
+
 
 def calcular_custo(response, modelo: str) -> dict:
     """
@@ -83,7 +97,7 @@ def calcular_custo(response, modelo: str) -> dict:
             "custo_input_usd":  round(custo_input,  6),
             "custo_output_usd": round(custo_output, 6),
             "custo_usd":        round(custo_total,  6),
-            "custo_brl":        round(custo_total * 6, 5),  # cotação aproximada
+            "custo_brl":        round(custo_total * COTACAO_BRL, 5),
         }
 
     except Exception as e:
@@ -98,13 +112,3 @@ def calcular_custo(response, modelo: str) -> dict:
             "custo_brl": 0,
             "erro": str(e),
         }
-
-
-def formatar_custo(custo: dict) -> str:
-    """Retorna string formatada para exibição do custo."""
-    return (
-        f"Tokens: {custo['tokens_input']} entrada + "
-        f"{custo['tokens_output']} saída — "
-        f"Custo: US$ {custo['custo_usd']:.5f} "
-        f"(≈ R$ {custo['custo_brl']:.4f})"
-    )

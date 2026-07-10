@@ -7,7 +7,7 @@ from google.genai import errors, types
 from pydantic import BaseModel, Field
 from typing import List, Literal, Optional
 
-from cost_tracker import calcular_custo
+from cost_tracker import COTACAO_BRL, calcular_custo
 from rag_manager import rag
 
 # ─── CONFIG ────────────────────────────────────────────────────────────────────
@@ -565,7 +565,7 @@ with st.sidebar:
 🔤 Tokens entrada: <b>{total_input:,}</b><br>
 📝 Tokens saída: <b>{total_output:,}</b><br>
 💵 Custo total: <b>US$ {total_custo:.5f}</b><br>
-🇧🇷 Em reais (≈ R$ 6/USD): <b>R$ {total_custo * 6:.4f}</b>
+🇧🇷 Em reais (≈ R$ {COTACAO_BRL}/USD): <b>R$ {total_custo * COTACAO_BRL:.4f}</b>
 </div>
 """, unsafe_allow_html=True)
 
@@ -578,9 +578,10 @@ with st.sidebar:
     st.divider()
     st.markdown("**🔍 Status do RAG**")
     if _stats:
+        _n_trechos = f"{_stats['chunks']:,}".replace(",", ".")
         st.success(
             f"Índice ativo — {_stats['leis']} leis, "
-            f"{_stats['chunks']:,} trechos ({_stats['dim']} dims)".replace(",", ".")
+            f"{_n_trechos} trechos ({_stats['dim']} dims)"
         )
     else:
         st.warning("Índice não encontrado. Execute:\n```\npython build_index.py\n```")
