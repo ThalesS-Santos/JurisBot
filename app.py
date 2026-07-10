@@ -1,12 +1,13 @@
-import streamlit as st
-import json
-import time
 import html as html_lib
+import os
+
+import streamlit as st
 from google import genai
-from google.genai import types
+from google.genai import errors, types
 from pydantic import BaseModel, Field
 from typing import List, Literal, Optional
-from cost_tracker import calcular_custo, formatar_custo
+
+from cost_tracker import calcular_custo
 from rag_manager import rag
 
 # ─── CONFIG ────────────────────────────────────────────────────────────────────
@@ -350,6 +351,54 @@ div.stButton > button:active {
     color: #94A3B8;
     line-height: 2.2;
 }
+
+/* ── Fontes do RAG ── */
+.jb-fonte {
+    background: #0F172A;
+    border: 1px solid #1E293B;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+}
+.jb-fonte-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.jb-fonte-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #60A5FA;
+    background: rgba(59,130,246,0.12);
+    border: 1px solid rgba(59,130,246,0.25);
+    border-radius: 6px;
+    padding: 2px 8px;
+}
+.jb-fonte-lei {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #E2E8F0;
+}
+.jb-fonte-art {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: #93C5FD;
+}
+.jb-fonte-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: #475569;
+    margin-left: auto;
+}
+.jb-fonte-texto {
+    font-size: 0.82rem;
+    color: #94A3B8;
+    line-height: 1.6;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -392,25 +441,25 @@ class TriagemJuridica(BaseModel):
 # ─── CLIENTE GEMINI ───────────────────────────────────────────────────────────
 @st.cache_resource
 def get_client():
-    api_key = st.secrets.get("GEMINI_API_KEY", "")
+    try:
+        api_key = st.secrets.get("GEMINI_API_KEY", "")
+    except FileNotFoundError:
+        # Sem .streamlit/secrets.toml (clone novo) — tenta variável de ambiente
+        api_key = os.environ.get("GEMINI_API_KEY", "")
     if not api_key:
         return None
     return genai.Client(api_key=api_key)
 
 
 # ─── FUNÇÃO PRINCIPAL ─────────────────────────────────────────────────────────
-def analisar_caso(client, relato: str) -> tuple[TriagemJuridica, dict]:
-    modelo = "gemini-3-flash-preview"
+MODELO_GERACAO = "gemini-3-flash-preview"
 
-    # RAG: recupera os chunks mais relevantes para o relato específico
-    if rag.index_exists():
-        contexto_juridico = rag.get_context(client, relato, top_k=8)
-        fonte_contexto = "RAG (embeddings Gemini)"
-    else:
-        # Fallback para a base estática enquanto o índice não existe
-        from knowledge_base import BASE_JURIDICA
-        contexto_juridico = BASE_JURIDICA
-        fonte_contexto = "base estática (execute build_index.py para ativar o RAG)"
+
+def analisar_caso(client, relato: str):
+    """Retorna (TriagemJuridica, custo: dict, fontes: list[Trecho])."""
+    # RAG: recupera os trechos das leis reais mais relevantes para o relato
+    trechos, custo_embedding = rag.buscar(client, relato, top_k=4)
+    contexto_juridico = rag.montar_contexto(trechos)
 
     system_prompt = f"""Você é um assistente jurídico especializado em orientar cidadãos brasileiros de baixa renda sobre seus direitos.
 
@@ -420,16 +469,17 @@ IMPORTANTE:
 - Você NÃO é advogado e NÃO presta consultoria jurídica formal.
 - Sua análise é orientativa e educacional — sempre recomende buscar um profissional.
 - Seja claro, direto e use linguagem acessível.
-- Base seu raciocínio APENAS nos trechos de legislação fornecidos abaixo.
-- Cite os artigos exatos encontrados nos trechos.
+- Base seu raciocínio APENAS nas fontes de legislação fornecidas abaixo.
+- Cite os artigos exatos encontrados nas fontes.
+- Se as fontes não cobrirem o caso, seja honesto: marque tem_caso como "necessita_analise" e recomende a Defensoria Pública.
 
-TRECHOS RELEVANTES DA LEGISLAÇÃO BRASILEIRA (recuperados por similaridade semântica):
+FONTES DA LEGISLAÇÃO BRASILEIRA (trechos reais recuperados por similaridade semântica):
 {contexto_juridico}
 
 Analise o relato e preencha todos os campos do schema com precisão."""
 
     response = client.models.generate_content(
-        model=modelo,
+        model=MODELO_GERACAO,
         contents=[
             types.Content(role="user", parts=[
                 types.Part(text=f"Relato do cidadão:\n\n{relato}")
@@ -447,9 +497,18 @@ Analise o relato e preencha todos os campos do schema com precisão."""
     )
 
     resultado = response.parsed
-    custo = calcular_custo(response, modelo)
-    custo["fonte_contexto"] = fonte_contexto
-    return resultado, custo
+    if resultado is None:
+        motivo = (
+            response.candidates[0].finish_reason if response.candidates else "desconhecido"
+        )
+        raise ValueError(
+            f"A resposta do modelo não pôde ser interpretada (motivo: {motivo}). Tente novamente."
+        )
+
+    custo = calcular_custo(response, MODELO_GERACAO)
+    custo["custo_embedding_usd"] = round(custo_embedding, 6)
+    custo["custo_usd"] = round(custo["custo_usd"] + custo_embedding, 6)
+    return resultado, custo, trechos
 
 
 # ─── INICIALIZAR ESTADO ───────────────────────────────────────────────────────
@@ -457,12 +516,16 @@ if "historico_custos" not in st.session_state:
     st.session_state.historico_custos = []
 if "resultado" not in st.session_state:
     st.session_state.resultado = None
-if "relato_atual" not in st.session_state:
-    st.session_state.relato_atual = ""
+if "fontes" not in st.session_state:
+    st.session_state.fontes = []
 
 
 # ─── HEADER ───────────────────────────────────────────────────────────────────
-st.markdown("""
+_stats = rag.stats()
+_num_leis = str(_stats["leis"]) if _stats else "—"
+_num_trechos = f"{_stats['chunks']:,}".replace(",", ".") if _stats else "—"
+
+st.markdown(f"""
 <div class="jb-hero">
     <div class="jb-badge">⚖️ &nbsp;Triagem Jurídica · IA</div>
     <div class="jb-hero-title">Juris<span>Bot</span></div>
@@ -471,12 +534,12 @@ st.markdown("""
     </div>
     <div class="jb-hero-stats">
         <div class="jb-stat">
-            <div class="jb-stat-num">5</div>
-            <div class="jb-stat-label">Áreas do Direito</div>
+            <div class="jb-stat-num">{_num_leis}</div>
+            <div class="jb-stat-label">Leis Reais Indexadas</div>
         </div>
         <div class="jb-stat">
-            <div class="jb-stat-num">100%</div>
-            <div class="jb-stat-label">Gratuito</div>
+            <div class="jb-stat-num">{_num_trechos}</div>
+            <div class="jb-stat-label">Trechos Pesquisáveis</div>
         </div>
         <div class="jb-stat">
             <div class="jb-stat-num">Gemini 3</div>
@@ -514,8 +577,11 @@ with st.sidebar:
 
     st.divider()
     st.markdown("**🔍 Status do RAG**")
-    if rag.index_exists():
-        st.success("Índice ativo — RAG com embeddings Gemini")
+    if _stats:
+        st.success(
+            f"Índice ativo — {_stats['leis']} leis, "
+            f"{_stats['chunks']:,} trechos ({_stats['dim']} dims)".replace(",", ".")
+        )
     else:
         st.warning("Índice não encontrado. Execute:\n```\npython build_index.py\n```")
 
@@ -550,12 +616,13 @@ with col_left:
     with st.expander("💡 Ver exemplos de relatos"):
         for ex in EXEMPLOS:
             if st.button(f'"{ex[:80]}…"', key=ex):
-                st.session_state.relato_atual = ex
+                # Escreve direto na chave do widget (o botão roda antes do
+                # text_area no script, então o valor aparece no mesmo rerun)
+                st.session_state.input_relato = ex
 
     relato = st.text_area(
         label="relato",
         label_visibility="collapsed",
-        value=st.session_state.relato_atual,
         placeholder="Conte o que aconteceu com suas próprias palavras. Quanto mais detalhes, melhor a análise...",
         height=180,
         key="input_relato"
@@ -572,17 +639,29 @@ with col_left:
 if analisar:
     if not relato or len(relato.strip()) < 20:
         st.warning("Por favor, descreva sua situação com mais detalhes.")
+    elif not rag.disponivel:
+        st.error(
+            "⚠️ Índice RAG não encontrado. Coloque os PDFs das leis na pasta "
+            "`leis/` e execute `python build_index.py` antes de usar o app."
+        )
     else:
         client = get_client()
         if not client:
             st.error("⚠️ Chave de API não configurada. Adicione `GEMINI_API_KEY` em `.streamlit/secrets.toml`.")
         else:
-            with st.spinner("Analisando seu caso..."):
+            with st.spinner("Buscando na legislação e analisando seu caso..."):
                 try:
-                    resultado, custo = analisar_caso(client, relato)
+                    resultado, custo, trechos = analisar_caso(client, relato)
                     st.session_state.resultado = resultado
+                    st.session_state.fontes = trechos
                     st.session_state.historico_custos.append(custo)
                     st.rerun()
+                except errors.APIError as e:
+                    if getattr(e, "code", None) == 429:
+                        st.error("⏳ Limite de requisições da API atingido. Aguarde um minuto e tente novamente.")
+                    else:
+                        st.error(f"Erro na API Gemini ({e.code}): {e.message}")
+                    st.session_state.resultado = None
                 except Exception as e:
                     st.error(f"Erro ao processar: {e}")
                     st.session_state.resultado = None
@@ -619,10 +698,10 @@ with col_right:
 
         custo_html = ""
         if custo_info:
-            fonte = html_lib.escape(custo_info.get("fonte_contexto", ""))
+            n_fontes = len(st.session_state.fontes)
             custo_html = f"""
 <div class="jb-custo">
-<span style="color:#334155">contexto: {fonte}</span>
+<span style="color:#334155">RAG · {n_fontes} fontes</span>
 <span>entrada {custo_info.get('tokens_input', '—')} tk</span>
 <span>saída {custo_info.get('tokens_output', '—')} tk</span>
 <span>US$ {custo_info.get('custo_usd', 0):.5f}</span>
@@ -659,6 +738,23 @@ with col_right:
 </div>
 
 {custo_html}
+</div>
+""", unsafe_allow_html=True)
+
+        # ── Fontes consultadas (transparência do RAG) ──
+        if st.session_state.fontes:
+            with st.expander(f"📚 Fontes consultadas ({len(st.session_state.fontes)} trechos das leis)"):
+                for n, t in enumerate(st.session_state.fontes, 1):
+                    snippet = t.texto[:320] + ("…" if len(t.texto) > 320 else "")
+                    st.markdown(f"""
+<div class="jb-fonte">
+<div class="jb-fonte-header">
+<span class="jb-fonte-num">Fonte {n}</span>
+<span class="jb-fonte-lei">{html_lib.escape(t.lei)}</span>
+<span class="jb-fonte-art">{html_lib.escape(t.artigos)}</span>
+<span class="jb-fonte-score">{t.score:.0%} relevante</span>
+</div>
+<div class="jb-fonte-texto">{html_lib.escape(snippet)}</div>
 </div>
 """, unsafe_allow_html=True)
     else:
